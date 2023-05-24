@@ -1,10 +1,24 @@
 from libzim.reader import Archive
 from libzim.search import Query, Searcher
 from bs4 import BeautifulSoup
-from txtai.pipeline import Summary
 import time
 import sqlite3
 
+from nltk.tokenize import sent_tokenize, word_tokenize
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+def summarize(text):
+    sentences = sent_tokenize(text)
+
+    # Calculate TF-IDF scores for each sentence
+    vectorizer = TfidfVectorizer()
+    sentence_vectors = vectorizer.fit_transform(sentences)
+
+    # Find the most representative sentence
+    representative_sentence_idx = sentence_vectors.sum(axis=1).argmax()
+    summary = sentences[representative_sentence_idx]
+
+    return summary
 
 connection = sqlite3.connect("wikipedia.db")
 cursor = connection.cursor()
@@ -22,9 +36,10 @@ search_count = search.getEstimatedMatches()
 print(f"There are {search_count} matches for {search_string}")
 arts=(list(search.getResults(0, search_count)))
 
-count=0
-summary = Summary(gpu=True)
 
+
+
+count=0
 total=search_count
 done=0
 
@@ -55,10 +70,9 @@ for i in arts:
             con=True
 
 
+    text=summarize(text)
 
-    # Create and run pipeline
-    #print(summary(text))
-    cursor.execute("INSERT INTO summaries VALUES (?, ?)", (entry.title, summary(text)))
+    cursor.execute("INSERT INTO summaries VALUES (?, ?)", (entry.title, text))
     connection.commit()
 
     count+=1
