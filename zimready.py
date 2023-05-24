@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 import time
 import sqlite3
 import re
+import nltk
+nltk.download('punkt')
 
 from nltk.tokenize import sent_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
